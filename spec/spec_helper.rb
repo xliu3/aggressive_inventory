@@ -1,0 +1,1 @@
+require 'aggressive_inventory'
