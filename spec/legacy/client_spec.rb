@@ -26,7 +26,7 @@ describe AggressiveInventory::Legacy::Client do
     it 'returns an array' do
       AggressiveInventory.configure do |config|
         config.base_uri = 'http://localhost:4000/v1/'
-        config.auth_token = 'SECRET KEY'
+        config.auth_token = '8c453f37442344bd8d8763e22720d925'
       end
 
       client = AggressiveInventory::Legacy::Client.new
@@ -46,7 +46,7 @@ describe AggressiveInventory::Legacy::Client do
     it 'tests the remote app' do
       AggressiveInventory.configure do |config|
         config.base_uri = 'http://localhost:4000/v1/'
-        config.auth_token = '13706019a7af61ca583557e3bbebc513'
+        config.auth_token = '8c453f37442344bd8d8763e22720d925'
       end
 
       client = AggressiveInventory::Legacy::Client.new
