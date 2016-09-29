@@ -139,6 +139,67 @@ module AggressiveInventory
         # returns nothing on success
       end
 
+#------------------------------>damage
+      def create_damage(damage_type_name, rental_uuid, repair_uuid)
+        response = HTTParty.post(@base_uri + "damages/",
+                                 body: { 'damage_type' => damage_type_name,
+                                         'rental_uuid' => rental_uuid,
+                                         'repair_uuid' => repair_uuid },
+                                 headers: @post_headers).to_json
+        handle_damage_errors(response)
+        JSON.parse(response.body).with_indifferent_access
+      end
+
+      def damage(uuid)
+        response = HTTParty.get(@base_uri + "damages/#{uuid}", headers: @get_headers)
+        handle_reservation_errors(response)
+        JSON.parse(response.body).with_indifferent_access
+      end
+
+      def damages(item)
+        body = { 'item' => item }
+        response = HTTParty.get(@base_uri + "damages/", body: body.to_json, headers: @get_headers)
+        handle_reservation_errors(response)
+        JSON.parse(response.body).with_indifferent_access
+      end
+
+      def delete_damage(uuid)
+        response = HTTParty.delete(@base_uri + "damages/#{uuid}", headers: @get_headers)
+        handle_reservation_errors
+      end
+
+      def create_damage_type(name)
+        response = HTTParty.post(@base_uri + "damage_types/",
+                                 body: { 'name' => name },
+                                 headers: @post_headers).to_json
+        handle_damage_type_errors(response)
+        JSON.parse(response.body).with_indifferent_access
+      end
+
+      def damage_types
+        response = HTTParty.get(@base_uri + "damage_types/", headers: @get_headers)
+        handle_damage_type_errors
+        JSON.parse(response.body)
+      end
+
+      def delete_damage_type(uuid)
+        response = HTTParty.delete(@base_uri + "damage_types/#{uuid}", headers: @get_headers)
+        handle_damage_type_errors
+      end
+
+      def update_damage_type(uuid, params = {})
+        raise ArgumentError if params.empty?
+        response = HTTParty.put(@base_uri + "damage_types/#{uuid}", body: params.to_json, heasers: @put_headers)
+        handle_damage_type_errors
+      end
+
+      def damage_type(uuid)
+        response = HTTParty.get(@base_uri + "damage_types/#{uuid}", heaser: @get_headers)
+        handles_damage_type_errors
+        JSON.parse(response.body).with_indifferent_access
+      end
+#-------------------------->
+
       def handle_item_type_errors(response)
         raise AuthError, response.body if response.code == 401
         raise ItemTypeError, response.body if response.code == 422
@@ -160,6 +221,19 @@ module AggressiveInventory
         raise InventoryError, response.body if response.code != 200
       end
 
+      def handle_damage_errors(response)
+        raise AuthError, response.body if response.code == 401
+        raise DamageError, response.body if response.code == 422
+        raise DamageNotFound, response.body if response.code == 404
+        raise InventoryError, response.body if response.code != 200
+      end
+
+      def handle_damage_type_errors(response)
+        raise AuthError, response.body if response.code == 401
+        raise DamageTypeError, response.body if response.code == 422
+        raise DamageTypeNotFound, response.body if response.code == 404
+        raise IventoryError, response.body if response.code != 200
+      end
     end
   end
 end

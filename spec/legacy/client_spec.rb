@@ -43,6 +43,12 @@ describe AggressiveInventory::Legacy::Client do
       name
     end
 
+    let(:damage_type_name) do
+      damage_type_name = ''
+      damage_type_name += (rand(26) + 65).chr until name.length > 120
+      damage_type_name
+    end
+
     it 'tests the remote app' do
       AggressiveInventory.configure do |config|
         config.base_uri = 'http://localhost:4000/v1/'
@@ -109,6 +115,56 @@ describe AggressiveInventory::Legacy::Client do
       expect(reservation_uuid = response.try(:[], 'uuid')).not_to be_nil
       expect(response.try(:[], 'item_type')).to eq(name)
       expect(response.try(:[], 'item')).to eq(item_name)
+
+      #---------------------->
+      repair_reservation_uuid = nil
+      #create repair reservation
+      expect { response = client.create_reservation(name, reservation_end + 1.days, reservation_end + 7.days) }.not_to raise_error
+      expect(response).to be_a(Hash)
+      expct(repair_reservation_uuid = response.try(:[], 'uuid')).not_to be_nil
+      expect(response.try(:[], 'item_type')).to eq(name)
+      expect(response.try(:[], 'item')).to eq(item_name)
+
+      damage_type_uuid = nil
+      #create damage_type
+      expect { response = client.create_damage_type(damage_type_name) }.not_to raise_error
+      expect(response).to be_a(Hash)
+      expect(damage_type_uuid = response.try(:[], 'uuid')).not_to be_nil
+
+      #get all damage_types
+      expect { response = client.damage_types }.not_to be_nil
+      expect(response).to be_a(Array)
+      expect(response.count).not_to be 0
+
+      #get one damage_type
+      expect { response = client.damage_type(damage_type_uuid) }.not_to raise_error
+      expect(response).to be_a(Hash)
+      expect(response.try(:[], 'uuid')).to eq(damage_type_uuid)
+      expect(response.try(:[], 'name')).to eq(damage_type_name)
+
+      damage_uuid = nil
+      #create damage
+      expect { response = client.create_damage(damage_type_name, reservation_uuid, repair_reservation_uuid) }.not_to raise_error
+      expect(response).to be_a(Hash)
+      expect(damage_uuid = response.try(:[], 'uuid')).not_to be_nil
+      expect(response.try(:[], 'damage_type')).to eq(damage_type_name)
+
+      #get all damges with the same item
+      expect { response = client.damages(item_name) }.not_to be_nil
+      expect(response).to be_a(Array)
+      expect(response.count).not_to be 0
+
+      #get one damage
+      expect { response = client.damage(damage_uuid) }.not_to raise_error
+      expect(response).to be_a(Hash)
+      expect(response.try(:[], 'uuid')).to eq(damage_uuid)
+
+      #update_damage_type
+      new_damage_type_name = 'New DamageType Name'
+      expect { response = client.update_damage_type(damage_type_uuid, name: new_damage_type_name) }.not_to raise_error
+      expect(response).to be_a(Hash)
+      expect(response.try(:[], 'name')).to eq(new_damage_type_name)
+      #------------------------>
 
       # get reservation
       expect { response = client.reservation(reservation_uuid) }.not_to raise_error
